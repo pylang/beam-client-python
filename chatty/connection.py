@@ -1,11 +1,12 @@
+import requests
+
 from .evented import Evented
 from .socket import Socket
 from .errors import NotAuthenticatedError, UnknownError
 
-from requests import Session, codes
-
 
 class Connection(Evented):
+    '''Parse the config file.'''
 
     def __init__(self, config):
         super(Connection, self).__init__()
@@ -16,20 +17,20 @@ class Connection(Evented):
         self.user_id = None
 
     def _get_auth_body(self):
-        """Returns the authentication body for logging in to Beam."""
+        """Return the authentication body for logging in to Beam."""
         return {
             "username": self.config.USERNAME,
             "password": self.config.PASSWORD
         }
 
     def _build_addr(self, path):
-        """Creates an address to Beam with the given path."""
+        """Create an address to Beam with the given path."""
         return self.config.BEAM_ADDR + path
 
     def _log_into_beam(self):
-        """Logs into Beam via HTTPS."""
+        """Log into Beam via HTTPS."""
 
-        session = Session()
+        session = requests.Session()
 
         # Attempt to log in
         login_response = session.post(
@@ -38,7 +39,7 @@ class Connection(Evented):
         )
 
         # Throw an error if the user login fails
-        if login_response.status_code != codes.ok:
+        if login_response.status_code != requests.codes.ok:
             raise NotAuthenticatedError(login_response)
 
         self.user_id = login_response.json()["id"]
@@ -49,13 +50,13 @@ class Connection(Evented):
         )
 
         # If there's an error here... that should not be!
-        if chat_response.status_code != codes.ok:
+        if chat_response.status_code != requests.codes.ok:
             raise UnknownError(login_response)
 
         self.chat_details = chat_response.json()
 
     def _connect_to_chat(self):
-        """Connects to the chat websocket."""
+        """Connect to the chat websocket."""
 
         if self.chat_details is None:
             raise NotAuthenticatedError("You must first log in to Beam!")
@@ -65,7 +66,7 @@ class Connection(Evented):
         self.websocket.on("message", lambda msg: self.emit("message", msg))
 
     def _send_auth_packet(self):
-        """Sends an authentication packet to the chat server"""
+        """Send an authentication packet to the chat server"""
         self.websocket.send(
             "method",
             self.channel, self.user_id, self.chat_details["authkey"],
@@ -73,12 +74,12 @@ class Connection(Evented):
         )
 
     def authenticate(self, channel):
-        """Logs into beam and connects to the chat server."""
+        """Log into beam and connects to the chat server."""
         self.channel = channel
 
         self._log_into_beam()
         self._connect_to_chat()
 
     def message(self, msg):
-        """Sends a chat message."""
+        """Send a chat message."""
         self.websocket.send("method", msg, method="msg")

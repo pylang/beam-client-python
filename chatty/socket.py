@@ -1,10 +1,10 @@
-from .evented import Evented
+import json
+import random
 
 from tornado.websocket import websocket_connect
 from tornado.ioloop import IOLoop
 
-from random import randint
-from json import loads, dumps
+from .evented import Evented
 
 
 class Socket(Evented):
@@ -17,7 +17,7 @@ class Socket(Evented):
         self.connected = False
         self.ws = None
 
-        self.address_offset = randint(0, len(addresses)-1)
+        self.address_offset = random.randint(0, len(addresses)-1)
         self.addresses = addresses
 
         self._connect()
@@ -42,7 +42,7 @@ class Socket(Evented):
         if packet_str is None:
             self._on_close(1)
         else:
-            packet = loads(packet_str)
+            packet = json.loads(packet_str)
             self.emit("message", packet["data"])
 
     def _on_open(self, future):
@@ -66,17 +66,17 @@ class Socket(Evented):
 
         IOLoop.instance().call_later(1, self._connect)
 
-    def send(self, type, *args, **kwargs):
+    def send(self, type_, *args, **kwargs):
         if not self.connected:
             return
 
         packet = {
-            "type": type,
+            "type": type_,
             "arguments": args,
             "id": self.packet_id
         }
 
         packet.update(kwargs)
         print("SEND:", packet)
-        self.ws.write_message(dumps(packet))
+        self.ws.write_message(json.dumps(packet))
         self.packet_id += 1
