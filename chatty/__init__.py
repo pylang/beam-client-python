@@ -1,6 +1,6 @@
 from .connection import Connection
 
 
-def create(*args, **kwargs):
+def connect(*args, **kwargs):
     """Helper function for the creation of connections."""
     return Connection(*args, **kwargs)

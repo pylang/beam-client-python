@@ -5,6 +5,7 @@ class RequestError(Exception):
 
 class NotAuthenticatedError(RequestError):
     """Failed to connect to the Beam server."""
+    pass
 
 
 class UnknownError(RequestError):

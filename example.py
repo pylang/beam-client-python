@@ -2,7 +2,7 @@
 Example chat bot that monitors incoming messages and sends "Hi!" every second.
 """
 
-from chatty import create
+from chatty import connect
 import config
 
 from tornado.ioloop import PeriodicCallback, IOLoop
@@ -10,7 +10,7 @@ from functools import partial
 
 
 if __name__ == "__main__":
-    chat = create(config)
+    chat = connect(config)
 
     # Tell chat to authenticate with the beam server. It'll throw
     # a chatty.errors.NotAuthenticatedError if it fails.
