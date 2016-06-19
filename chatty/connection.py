@@ -1,3 +1,5 @@
+"""Process user data and hHandle chat interaction with requests and websockets."""
+
 import requests
 
 from .evented import Evented
@@ -16,6 +18,7 @@ class Connection(Evented):
         self.channel = None
         self.user_id = None
 
+    # Helper Methods ----------------------------------------------------------
     def _get_auth_body(self):
         """Return the authentication body for logging in to Beam."""
         return {
@@ -28,8 +31,11 @@ class Connection(Evented):
         return self.config.BEAM_ADDR + path
 
     def _log_into_beam(self):
-        """Log into Beam via HTTPS."""
+        """Log into Beam via HTTPS.
 
+        This method uses requests to access user data from the Beam API.
+
+        """
         session = requests.Session()
 
         # Attempt to log in
@@ -42,6 +48,7 @@ class Connection(Evented):
         if login_response.status_code != requests.codes.ok:
             raise NotAuthenticatedError(login_response)
 
+        # Parse user id from API json
         self.user_id = login_response.json()["id"]
 
         # Request auth for the chat server
@@ -53,11 +60,19 @@ class Connection(Evented):
         if chat_response.status_code != requests.codes.ok:
             raise UnknownError(login_response)
 
+        # Store remaining json data in `chat_details`
         self.chat_details = chat_response.json()
 
     def _connect_to_chat(self):
-        """Connect to the chat websocket."""
+        """Connect to the chat websocket.
 
+        This method uses websockets to interact with the chat.
+
+        See Also
+        --------
+        socket.Socket: details of websocket methods.
+
+        """
         if self.chat_details is None:
             raise NotAuthenticatedError("You must first log in to Beam!")
 
@@ -66,13 +81,15 @@ class Connection(Evented):
         self.websocket.on("message", lambda msg: self.emit("message", msg))
 
     def _send_auth_packet(self):
-        """Send an authentication packet to the chat server"""
+        """Send an authentication packet to the chat server; use a websocket."""
         self.websocket.send(
             "method",
             self.channel, self.user_id, self.chat_details["authkey"],
             method="auth"
         )
 
+    # Methods -----------------------------------------------------------------
+    # Uses the backend Socket to process user messages and emit directions.
     def authenticate(self, channel):
         """Log into beam and connects to the chat server."""
         self.channel = channel

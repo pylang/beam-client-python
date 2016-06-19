@@ -1,15 +1,14 @@
 class Evented():
     """Simple EventEmitter-like class.
 
-    Listens and reponds (emits) when events are discovered.
+    Listens and reponds (emits) when events are discovered.  Directs the websocket.
 
     See Also
     --------
-    connection.Connection: handles connecting to beam.
-    socket.Socket: sends things.
+    connection.Connection: handles connecting to Beam and chat.
+    socket.Socket: interacts with chat.
 
     """
-
     def __init__(self):
         self._event_handlers = []
 
@@ -22,4 +21,4 @@ class Evented():
         for handler in self._event_handlers:
             if handler[0] == event:
                 handler[1](*args)
-                # NOTE: Here is where data from beam is handled.
+                # NOTE: This is where data from chat is handled.

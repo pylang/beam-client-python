@@ -1,7 +1,13 @@
 """
 Example chat bot that monitors incoming messages and sends "Hi!" every second.
-"""
 
+This is the main event loop that does the following:
+- Processes the config file
+- Connects to beam and makes a websocket
+- Starts listening for message events
+- Use the websocket to send a message infinitely.  
+
+"""
 from chatty import connect
 import config
 
